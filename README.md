@@ -19,7 +19,7 @@ We’ve used **XGBoost**, **SMOTE**, and **evaluation metrics like ROC-AUC** to 
 
 ## 🧩 Dataset
 
-* **File Used:** `creditcard.csv`
+* **Source:** [Kaggle Credit Card Fraud Dataset](https://www.kaggle.com/mlg-ulb/creditcardfraud)
 * The dataset contains transaction details made by European cardholders in 2013.
 * It includes **Time**, **Amount**, and **PCA-transformed features (V1–V28)** to preserve confidentiality.
 * `Class` column →
@@ -51,7 +51,6 @@ pip install -r requirements.txt
 📂 Credit-Card-Fraud-Detection/
 │
 ├── 📄 CreditCardModel.ipynb       # Main Jupyter Notebook
-├── 📄 creditcard.csv              # Dataset
 ├── 📄 README.md                   # Project Documentation
 └── 📄 requirements.txt            # (optional) Library list
 ```
@@ -62,7 +61,7 @@ pip install -r requirements.txt
 
 | Step                      | Description                                      |
 | ------------------------- | ------------------------------------------------ |
-| **1. Data Loading**       | Imported and explored `creditcard.csv`           |
+| **1. Data Loading**       | Imported and explored dataset from Kaggle        |
 | **2. Preprocessing**      | Scaled numerical features using StandardScaler   |
 | **3. Handling Imbalance** | Used SMOTE to balance minority (fraud) class     |
 | **4. Model Building**     | Trained **XGBoost Classifier**                   |
@@ -125,3 +124,4 @@ This project is open-sourced under the **MIT License**. Feel free to use and mod
 ---
 
 ### ⭐ If you found this project useful, don’t forget to star the repo!
+
