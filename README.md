@@ -4,7 +4,7 @@
 
 This project aims to **detect fraudulent credit card transactions** using advanced **Machine Learning techniques**.
 Financial fraud is one of the most critical issues banks face, and this model helps identify suspicious transactions based on past data.
-We’ve used **XGBoost**, **SMOTE**, and **evaluation metrics like ROC-AUC** to build a robust classification system.
+We've used **XGBoost**, **SMOTE**, and **evaluation metrics like ROC-AUC** to build a robust classification system.
 
 ---
 
@@ -34,12 +34,6 @@ We’ve used **XGBoost**, **SMOTE**, and **evaluation metrics like ROC-AUC** to 
 Before running the notebook, make sure you have the required libraries installed:
 
 ```bash
-!pip install xgboost imbalanced-learn
-```
-
-You can also install all dependencies using:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -52,21 +46,30 @@ pip install -r requirements.txt
 │
 ├── 📄 CreditCardModel.ipynb       # Main Jupyter Notebook
 ├── 📄 README.md                   # Project Documentation
-└── 📄 requirements.txt            # (optional) Library list
+├── 📄 requirements.txt            # Python dependency list
+├── 📄 .gitignore                  # Git ignore rules
+├── 📄 LICENSE                     # MIT License
+├── 📄 CONTRIBUTING.md             # Contribution guidelines
+│
+└── 📂 src/                        # Reusable Python modules
+    ├── 📄 __init__.py
+    └── 📂 preprocessing/
+        ├── 📄 __init__.py
+        └── 📄 data_preprocessor.py  # DataPreprocessor class
 ```
 
 ---
 
 ## 🧪 Workflow Summary
 
-| Step                      | Description                                      |
-| ------------------------- | ------------------------------------------------ |
-| **1. Data Loading**       | Imported and explored dataset from Kaggle        |
-| **2. Preprocessing**      | Scaled numerical features using StandardScaler   |
-| **3. Handling Imbalance** | Used SMOTE to balance minority (fraud) class     |
-| **4. Model Building**     | Trained **XGBoost Classifier**                   |
-| **5. Evaluation**         | ROC-AUC, Confusion Matrix, Classification Report |
-| **6. Testing**            | Custom input example to check model predictions  |
+| Step                      | Description                                                     |
+| ------------------------- | --------------------------------------------------------------- |
+| **1. Data Loading**       | Imported and explored dataset from Kaggle                       |
+| **2. Preprocessing**      | Scaled numerical features using **separate** StandardScalers    |
+| **3. Handling Imbalance** | Used SMOTE to balance minority (fraud) class                    |
+| **4. Model Building**     | Trained **XGBoost Classifier**                                  |
+| **5. Evaluation**         | ROC-AUC, Confusion Matrix, Classification Report                |
+| **6. Testing**            | Custom input example to check model predictions                 |
 
 ---
 
@@ -123,5 +126,4 @@ This project is open-sourced under the **MIT License**. Feel free to use and mod
 
 ---
 
-### ⭐ If you found this project useful, don’t forget to star the repo!
-
+### ⭐ If you found this project useful, don't forget to star the repo!
