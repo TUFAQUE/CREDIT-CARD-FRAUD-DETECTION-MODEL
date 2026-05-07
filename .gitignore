@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Model artifacts (large binary files — use Git LFS or cloud storage instead)
+*.joblib
+*.pkl
+*.h5
+*.pt
+
+# Data files
+*.csv
+*.parquet
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
