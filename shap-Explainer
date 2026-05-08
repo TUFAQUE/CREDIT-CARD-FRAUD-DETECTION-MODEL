@@ -1,0 +1,61 @@
+import joblib
+import shap
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# =========================
+# LOAD PIPELINE
+# =========================
+
+pipeline = joblib.load("full_pipeline.joblib")
+
+print("Pipeline loaded successfully!")
+
+# =========================
+# EXTRACT MODEL
+# =========================
+
+model = pipeline.named_steps['model']
+
+print("Model extracted successfully!")
+
+# =========================
+# LOAD DATA
+# =========================
+
+df = pd.read_csv("creditcard.csv")
+
+# Replace target column name if different
+X = df.drop("Class", axis=1)
+
+# Use small sample for testing
+X_sample = X.sample(100, random_state=42)
+
+print("Sample data loaded!")
+
+# =========================
+# CREATE SHAP EXPLAINER
+# =========================
+
+explainer = shap.TreeExplainer(model)
+
+print("SHAP explainer created!")
+
+# =========================
+# GENERATE SHAP VALUES
+# =========================
+
+shap_values = explainer.shap_values(X_sample)
+
+print("SHAP values generated!")
+
+# =========================
+# SUMMARY PLOT
+# =========================
+
+shap.summary_plot(shap_values, X_sample)
+
+# Save image
+plt.savefig("shap_summary.png")
+
+print("SHAP summary plot saved!")
