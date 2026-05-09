@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fraud Detection</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface2: #111111;
+  --surface3: #1a1a1a;
+  --border: rgba(255,255,255,0.10);
+  --border2: rgba(255,255,255,0.22);
+  --text: #ffffff;
+  --muted: #666666;
+  --accent: #6c63ff;
+  --accent2: #4e46d4;
+  --accent-glow: rgba(108,99,255,0.12);
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.08);
+  --danger: #ef4444;
+  --danger-bg: rgba(239,68,68,0.08);
+  --warn: #f59e0b;
+  --radius: 4px;
+  --radius-lg: 6px;
+  --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  min-height: 100vh;
+  padding: 28px 20px 60px;
+}
+
+/* ── header ── */
+header {
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px rgba(108,99,255,0.6);
+  flex-shrink: 0;
+}
+
+.logo svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+header h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; color: #ffffff; }
+header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.badge {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  background: rgba(34,197,94,0.08);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,0.3);
+  display: flex; align-items: center; gap: 6px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── layout ── */
+.layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 290px;
+  gap: 18px;
+  align-items: start;
+}
+
+.main-col { display: flex; flex-direction: column; gap: 18px; }
+.side-col { display: flex; flex-direction: column; gap: 18px; }
+
+/* ── card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── mode tabs ── */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  background: var(--surface2);
+  padding: 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  background: transparent;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+.tab-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tab-btn.active { background: var(--accent); color: #fff; box-shadow: none; }
+
+/* ── csv panel ── */
+.csv-panel { display: none; }
+.csv-panel.visible { display: block; }
+
+.drop-zone {
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.drop-zone.drag-over { border-color: var(--accent); background: var(--accent-glow); }
+.drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+.drop-icon { font-size: 28px; margin-bottom: 8px; }
+.drop-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.drop-text strong { color: var(--text); }
+
+.csv-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.csv-info.visible { display: flex; }
+.csv-filename { color: var(--text); font-weight: 600; font-family: var(--mono); }
+.csv-row-count { margin-left: auto; color: var(--accent); font-weight: 600; }
+
+.btn-clear-csv {
+  padding: 3px 8px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+.btn-clear-csv:hover { color: var(--danger); border-color: var(--danger); }
+
+
+/* ── section label ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 18px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.section-label:first-child { margin-top: 0; }
+
+/* ── feature grid ── */
+.feat-panel { display: none; }
+.feat-panel.visible { display: block; }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; font-family: var(--mono); }
+.field input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12px;
+  padding: 7px 9px;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--mono);
+  outline: none;
+}
+.field input:hover { border-color: var(--border2); }
+.field input:focus { border-color: var(--accent); background: var(--accent-glow); }
+.field input.invalid { border-color: var(--danger); background: var(--danger-bg); }
+
+/* ── actions ── */
+.actions { margin-top: 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.btn {
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  letter-spacing: 0.2px;
+}
+.btn:hover { color: var(--text); border-color: var(--border2); }
+.btn:active { transform: scale(0.97); }
+
+.btn-predict {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  letter-spacing: 0.2px;
+  box-shadow: none;
+}
+.btn-predict:hover { background: var(--accent2); box-shadow: none; }
+.btn-predict:active { transform: scale(0.97); }
+.btn-predict:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-predict svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── spinner ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── progress ── */
+.progress-wrap { margin-top: 14px; display: none; }
+.progress-wrap.visible { display: block; }
+
+.progress-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; font-size: 12px; color: var(--muted);
+}
+.progress-pct { font-weight: 700; color: var(--accent); font-family: var(--mono); }
+
+.progress-track {
+  height: 3px; background: var(--surface2); border-radius: 0;
+  overflow: hidden; border: 1px solid var(--border);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0;
+  transition: width 0.15s linear;
+  width: 0%;
+  box-shadow: none;
+}
+.progress-sub { margin-top: 6px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.progress-eta { margin-top: 3px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+/* ── error / info ── */
+.error-msg {
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(255,77,106,0.25);
+  border-radius: var(--radius);
+  font-size: 12px; color: var(--danger);
+  display: none; line-height: 1.5;
+}
+
+/* ── result panel ── */
+.verdict-card {
+  border-radius: var(--radius-lg); padding: 22px;
+  border: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 10px;
+  min-height: 170px; justify-content: center;
+}
+.verdict-icon { width: 52px; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.verdict-icon svg { width: 26px; height: 26px; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.verdict-label { font-size: 20px; font-weight: 750; letter-spacing: -0.5px; }
+.verdict-sub { font-size: 12px; color: var(--muted); }
+
+.prob-bar-wrap { margin-top: 4px; width: 100%; }
+.prob-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--muted); }
+.prob-val { font-weight: 700; font-size: 13px; color: var(--text); font-family: var(--mono); }
+.prob-track { height: 3px; background: var(--surface2); border-radius: 0; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 0; transition: width 0.6s cubic-bezier(0.22,1,0.36,1), background 0.4s; width: 0%; }
+
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.meta-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+.meta-cell .k { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; font-weight: 600; }
+.meta-cell .v { font-size: 14px; font-weight: 700; font-family: var(--mono); }
+
+.tip { font-size: 12px; color: var(--muted); padding: 10px 14px; background: var(--surface2); border-radius: var(--radius); border: 1px solid var(--border); line-height: 1.6; }
+
+/* ── log panel ── */
+.log-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px;
+  max-width: 1100px; margin: 0 auto;
+}
+
+.log-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.log-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.9px; display: flex; align-items: center; gap: 8px; }
+.log-title svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.log-count { font-size: 11px; padding: 3px 8px; border-radius: 3px; background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(108,99,255,0.25); font-family: var(--mono); font-weight: 700; }
+.btn-clear-log { margin-left: auto; padding: 5px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 600; transition: color 0.15s, border-color 0.15s; }
+.btn-clear-log:hover { color: var(--danger); border-color: rgba(255,77,106,0.4); }
+
+.log-empty { text-align: center; padding: 28px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border2); border-radius: var(--radius); }
+.log-empty svg { width: 28px; height: 28px; stroke: var(--border2); fill: none; stroke-width: 1.5; margin-bottom: 10px; display: block; margin-inline: auto; }
+
+/* ── batch ── */
+.batch-block { margin-bottom: 2px; }
+
+.batch-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--surface2);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 1px solid var(--border); cursor: pointer;
+  user-select: none; transition: background 0.12s;
+}
+.batch-header:hover { background: var(--surface3); }
+
+.batch-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; }
+.batch-time { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-left: auto; }
+.batch-summary { display: flex; gap: 8px; align-items: center; }
+.batch-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+.pill-safe { background: var(--success-bg); color: var(--success); border: 1px solid rgba(31,210,134,0.2); }
+.pill-fraud { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(255,77,106,0.2); }
+.batch-chevron { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; flex-shrink: 0; }
+.batch-chevron.open { transform: rotate(180deg); }
+.batch-rows { display: none; }
+.batch-rows.open { display: block; }
+
+/* ── large batch summary card ── */
+.large-batch-summary {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+.large-batch-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.lbs-cell {
+  padding: 14px 16px;
+  background: var(--surface2);
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.lbs-cell:last-child { border-right: none; }
+.lbs-cell .lk { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 6px; }
+.lbs-cell .lv { font-size: 18px; font-weight: 800; font-family: var(--mono); }
+
+.large-batch-rows-preview {
+  border-top: 1px solid var(--border);
+}
+
+.lbr-header {
+  padding: 8px 14px;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fraud-only-toggle {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(255,77,106,0.25);
+  border-radius: 10px;
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.fraud-only-toggle:hover { background: rgba(255,77,106,0.2); }
+.fraud-only-toggle.active { background: var(--danger); color: #fff; }
+
+/* ── log row ── */
+.log-row {
+  display: flex; align-items: center; padding: 8px 14px;
+  border: 1px solid var(--border); border-top: none;
+  cursor: pointer; transition: background 0.1s; gap: 10px;
+}
+.log-row:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+.log-row:hover { background: var(--surface2); }
+.log-row-idx { font-size: 10px; color: var(--muted); font-family: var(--mono); min-width: 40px; }
+.log-verdict-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.log-row-prob { font-size: 12px; font-family: var(--mono); font-weight: 600; }
+.log-row-label { font-size: 12px; font-weight: 600; }
+.log-row-feat { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-left: auto; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px; }
+.log-row-expand { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+/* ── detail drawer ── */
+.detail-drawer { border: 1px solid var(--border); border-top: none; background: var(--surface2); padding: 14px 16px; display: none; animation: fadeIn 0.2s ease; }
+.detail-drawer.open { display: block; }
+.detail-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.detail-feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
+.detail-feat-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 6px 8px; }
+.detail-feat-cell .fn { font-size: 10px; color: var(--muted); font-family: var(--mono); font-weight: 600; }
+.detail-feat-cell .fv { font-size: 12px; font-family: var(--mono); font-weight: 600; color: var(--text); margin-top: 2px; }
+
+.batch-separator { height: 1px; background: var(--border2); margin: 10px 0; }
+
+/* ── virtual scroll container for large batches ── */
+.virtual-scroll-wrap {
+  height: 320px;
+  overflow-y: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface3) transparent;
+}
+.virtual-scroll-wrap::-webkit-scrollbar { width: 5px; }
+.virtual-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+.virtual-scroll-wrap::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+/* ── load-more for large batches ── */
+.load-more-row {
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-top: none;
+  background: var(--surface);
+  transition: background 0.12s;
+}
+.load-more-row:hover { background: var(--surface2); }
+
+/* ── animations ── */
+.fade-in { animation: fadeIn 0.35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+/* ── responsive ── */
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .detail-feat-grid { grid-template-columns: repeat(3, 1fr); }
+  .large-batch-stats { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </div>
+  <div>
+    <h1>Fraud Detection</h1>
+    <p>XGBoost + StandardScaler · Kaggle CCF dataset</p>
+  </div>
+  <span class="badge"><span class="status-dot"></span>API live</span>
+</header>
+
+<div class="layout">
+  <!-- ── MAIN INPUT CARD ── -->
+  <div class="main-col">
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Input
+      </div>
+
+      <div class="mode-tabs">
+        <button class="tab-btn active" id="tab-manual" onclick="switchTab('manual')">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Manual Entry
+        </button>
+        <button class="tab-btn" id="tab-csv" onclick="switchTab('csv')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          CSV Upload
+        </button>
+      </div>
+
+      <!-- CSV panel -->
+      <div class="csv-panel" id="csv-panel">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="csv-file-input" accept=".csv" onchange="handleCSVFile(this.files[0])"/>
+          <div class="drop-icon">📂</div>
+          <div class="drop-text"><strong>Drop CSV here</strong> or click to browse<br>30 columns: Time, V1–V28, Amount (header optional)<br><span style="color:var(--warn);font-weight:600;font-size:11px;letter-spacing:0.3px;">MAX 100 ROWS PER UPLOAD</span></div>
+        </div>
+        <button class="btn" onclick="loadSampleCSV()" style="margin-top:10px;width:100%;justify-content:center;display:flex;align-items:center;gap:7px;color:var(--accent);border-color:rgba(108,99,255,0.3);background:rgba(108,99,255,0.07);">
+          <svg width="13" height="13" viewBox="0 0 24 24" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+          Load sample CSV <span style="opacity:0.6;font-weight:400;margin-left:4px;">100 rows · 22 fraud cases</span>
+        </button>
+        <div class="csv-info" id="csv-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" style="stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="csv-filename" id="csv-filename">—</span>
+          <span class="csv-row-count" id="csv-row-count"></span>
+          <button class="btn-clear-csv" onclick="clearCSV()">✕</button>
+        </div>
+
+
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn-predict" id="predict-btn-csv" onclick="predictCSV()">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span id="btn-label-csv">Run prediction</span>
+            <div class="spinner" id="spinner-csv"></div>
+          </button>
+        </div>
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-header">
+            <span id="progress-status">Processing…</span>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-sub" id="progress-sub"></div>
+          <div class="progress-eta" id="progress-eta"></div>
+        </div>
+        <div class="error-msg" id="error-msg-csv"></div>
+      </div>
+
+      <!-- Manual panel -->
+      <div class="feat-panel visible" id="feat-panel">
+        <div class="section-label">Time &amp; Amount</div>
+        <div class="grid" id="group-1"></div>
+
+        <div class="section-label">PCA Components — V1 to V14</div>
+        <div class="grid" id="group-2"></div>
+
+        <div class="section-label">PCA Components — V15 to V28</div>
+        <div class="grid" id="group-3"></div>
+
+        <div class="actions">
+          <button class="btn" onclick="fillSample(false)">Sample: safe</button>
+          <button class="btn" onclick="fillSample(true)">Sample: fraud</button>
+          <button class="btn" onclick="clearAll()">Clear</button>
+          <button class="btn-predict" id="predict-btn" onclick="predictManual()">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span id="btn-label">Run prediction</span>
+            <div class="spinner" id="spinner"></div>
+          </button>
+        </div>
+        <div class="error-msg" id="error-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIDE RESULT PANEL ── -->
+  <div class="side-col">
+    <div class="verdict-card" id="verdict-card">
+      <div style="color:var(--muted);font-size:13px;text-align:center;line-height:1.7">Enter features or upload a CSV<br>and run prediction</div>
+    </div>
+
+    <div class="card" id="prob-card" style="display:none">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Fraud probability
+      </div>
+      <div class="prob-bar-wrap">
+        <div class="prob-label">
+          <span>Score</span>
+          <span class="prob-val" id="prob-pct">—</span>
+        </div>
+        <div class="prob-track"><div class="prob-fill" id="prob-fill-result"></div></div>
+      </div>
+    </div>
+
+    <div class="meta-grid" id="meta-grid" style="display:none">
+      <div class="meta-cell"><div class="k">Raw score</div><div class="v" id="meta-prob">—</div></div>
+      <div class="meta-cell"><div class="k">Verdict</div><div class="v" id="meta-verdict">—</div></div>
+      <div class="meta-cell"><div class="k">Threshold</div><div class="v">0.50</div></div>
+      <div class="meta-cell"><div class="k">Model</div><div class="v" style="font-size:12px">XGBoost</div></div>
+    </div>
+
+    <div class="tip">
+      Standard <strong>Kaggle CCF</strong> layout: <code style="font-family:var(--mono);font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px">Time, V1–V28, Amount</code>. Large CSVs use a single batch request.
+    </div>
+  </div>
+</div>
+
+<!-- ── LOG PANEL ── -->
+<div class="log-panel" style="margin-top:18px;" id="log-panel">
+  <div class="log-header">
+    <div class="log-title">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+      Prediction log
+    </div>
+    <span class="log-count" id="log-count">0</span>
+    <button class="btn-clear-log" onclick="clearLog()">Clear log</button>
+  </div>
+  <div id="log-body">
+    <div class="log-empty" id="log-empty">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      No predictions yet — results will appear here
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════ */
+const API = 'https://credit-card-fraud-detection-model-dc5x.onrender.com';
+//https://credit-card-fraud-detection-model-dc5x.onrender.com
+//http://127.0.0.1:8000
+const CSV_ROW_LIMIT = 100;           // hard cap on rows per upload
+const LARGE_BATCH_THRESHOLD = 50;   // use /predict_batch above this
+const LOG_INLINE_LIMIT = 500;       // virtualize log rows above this count
+
+const FEATURE_NAMES = [
+  'Time','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10',
+  'V11','V12','V13','V14','V15','V16','V17','V18','V19','V20',
+  'V21','V22','V23','V24','V25','V26','V27','V28','Amount'
+];
+
+const FRAUD_SAMPLE = [
+  406.0,-2.3122265423263,1.95199201064158,-1.60985073229769,3.9979055875468,
+  -0.522187864667764,-1.42654531920595,-2.53738730624579,1.39165724829804,
+  -2.77008927719433,-2.77227214465915,3.20203320709635,-2.89990738849473,
+  -0.595221881324605,-4.28925378244217,0.389724120274487,-1.14074717980657,
+  -2.83005567450437,-0.0168224681808257,0.416955705037907,0.126910559061474,
+  0.517232370861764,-0.0350493686052974,-0.465211076182388,0.320198198514526,
+  0.0445191674731724,0.177839798284401,0.261145002567677,-0.143275874698919,0.0
+];
+
+const SAFE_SAMPLE = [
+  0.0,-1.3598071336738,-0.0727811733098497,2.53634673796914,1.37815522427443,
+  -0.338320769942518,0.462387777762292,0.239598554061257,0.0986979012610507,
+  0.363786969611213,0.0907941719789316,-0.551599533260813,-0.617800855762348,
+  -0.991389847235408,-0.311169353699879,1.46817697209427,-0.470400525259478,
+  0.207971241929242,0.0257905801985591,0.403992960255733,0.251412098239705,
+  -0.018306777944153,0.277837575558899,-0.110473910188767,0.0669280749146731,
+  0.128539358273528,-0.189114843888824,0.133558376740387,-0.0210530534538215,149.62
+];
+
+// Paste this into your FastAPI main.py:
+console.info(`
+%c── /predict_batch endpoint for main.py ──
+%c
+from typing import List
+from pydantic import BaseModel
+
+class BatchInput(BaseModel):
+    rows: List[List[float]]
+
+@app.post("/predict_batch")
+def predict_batch(data: BatchInput):
+    try:
+        features = np.array(data.rows)
+        predictions = model.predict(features).tolist()
+        probabilities = model.predict_proba(features)[:, 1].tolist()
+        return {
+            "predictions": predictions,
+            "probabilities": probabilities
+        }
+    except Exception as e:
+        return {"error": str(e)}
+`, 'color:#a09aff;font-weight:bold', 'color:#6b7080');
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let csvRows = [];
+let csvFilename = '';
+let logBatches = [];
+let totalLogItems = 0;
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+function buildInputs() {
+  const g1 = document.getElementById('group-1');
+  const g2 = document.getElementById('group-2');
+  const g3 = document.getElementById('group-3');
+  function addField(container, name) {
+    const d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = `<label title="${name}">${name}</label><input type="number" id="f_${name}" placeholder="0.00" step="any"/>`;
+    container.appendChild(d);
+  }
+  addField(g1,'Time'); addField(g1,'Amount');
+  for (let i=1;i<=14;i++) addField(g2,`V${i}`);
+  for (let i=15;i<=28;i++) addField(g3,`V${i}`);
+}
+buildInputs();
+
+/* ═══════════════════════════════════════════
+   TAB SWITCH
+═══════════════════════════════════════════ */
+function switchTab(mode) {
+  const isManual = mode === 'manual';
+  document.getElementById('tab-manual').classList.toggle('active', isManual);
+  document.getElementById('tab-csv').classList.toggle('active', !isManual);
+  document.getElementById('feat-panel').classList.toggle('visible', isManual);
+  document.getElementById('csv-panel').classList.toggle('visible', !isManual);
+}
+
+/* ═══════════════════════════════════════════
+   MANUAL INPUT
+═══════════════════════════════════════════ */
+function getValues() {
+  return FEATURE_NAMES.map(n => {
+    const el = document.getElementById(`f_${n}`);
+    return el ? parseFloat(el.value) : NaN;
+  });
+}
+
+function clearAll() {
+  FEATURE_NAMES.forEach(n => {
+    const el = document.getElementById(`f_${n}`);
+    if (el) { el.value=''; el.classList.remove('invalid'); }
+  });
+  resetResultPanel();
+  document.getElementById('error-msg').style.display='none';
+}
+
+function fillSample(fraud) {
+  const vals = fraud ? FRAUD_SAMPLE : SAFE_SAMPLE;
+  FEATURE_NAMES.forEach((n,i) => {
+    const el = document.getElementById(`f_${n}`);
+    if (el) { el.value=vals[i]; el.classList.remove('invalid'); }
+  });
+}
+
+/* ═══════════════════════════════════════════
+   CSV HANDLING
+═══════════════════════════════════════════ */
+function handleCSVFile(file) {
+  if (!file) return;
+  csvFilename = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows = parseCSV(e.target.result);
+    if (!rows.length) { showError('csv','Could not parse CSV. Ensure it has 30 numeric columns.'); return; }
+
+    // Enforce 100-row cap
+    let truncated = false;
+    if (rows.length > CSV_ROW_LIMIT) {
+      rows = rows.slice(0, CSV_ROW_LIMIT);
+      truncated = true;
+    }
+
+    csvRows = rows;
+    document.getElementById('csv-filename').textContent = file.name;
+    document.getElementById('csv-row-count').textContent = rows.length.toLocaleString() + (rows.length===1?' row':' rows');
+    document.getElementById('csv-info').classList.add('visible');
+
+    // Show truncation warning if file was trimmed
+    if (truncated) {
+      showError('csv', `⚠ File exceeds the 100-row limit — only the first 100 rows have been loaded. Split your file into smaller batches to process all data.`);
+      document.getElementById('error-msg-csv').style.background = 'rgba(245,166,35,0.10)';
+      document.getElementById('error-msg-csv').style.borderColor = 'rgba(245,166,35,0.30)';
+      document.getElementById('error-msg-csv').style.color = '#f5a623';
+    }
+
+    if (rows.length === 1) {
+      FEATURE_NAMES.forEach((n,i) => {
+        const el = document.getElementById(`f_${n}`);
+        if (el) { el.value=rows[0][i]; el.classList.remove('invalid'); }
+      });
+      switchTab('manual');
+      showInfo('Single-row CSV detected — values filled in. Press Run prediction when ready.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l=>l.trim());
+  const rows = [];
+  for (const line of lines) {
+    const parts = line.split(',').map(s=>s.trim());
+    if (parts.length < 30) continue;
+    // Use first 30 columns; skip rows with any NaN (header row)
+    const nums = parts.slice(0, 30).map(Number);
+    if (nums.every(n=>!isNaN(n))) rows.push(nums);
+  }
+  return rows;
+}
+
+function clearCSV() {
+  csvRows=[];
+  csvFilename='';
+  document.getElementById('csv-info').classList.remove('visible');
+  document.getElementById('csv-file-input').value='';
+  document.getElementById('progress-wrap').classList.remove('visible');
+  document.getElementById('error-msg-csv').style.display='none';
+  resetResultPanel();
+}
+//fetch('/static/sample_transactions_100.csv')
+async function loadSampleCSV() {
+  try {
+    const res = await fetch('/sample_transactions_100.csv');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (!rows.length) { showError('csv', 'Could not parse sample CSV.'); return; }
+    csvRows = rows.slice(0, CSV_ROW_LIMIT);
+    csvFilename = 'sample_transactions_100.csv';
+    document.getElementById('csv-filename').textContent = csvFilename;
+    document.getElementById('csv-row-count').textContent = csvRows.length + ' rows';
+    document.getElementById('csv-info').classList.add('visible');
+    document.getElementById('error-msg-csv').style.display = 'none';
+  } catch(err) {
+    showError('csv', `Could not load sample CSV: ${err.message}. Make sure sample_transactions_100.csv is in your frontend/ folder.`);
+  }
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f) handleCSVFile(f); });
+
+/* ═══════════════════════════════════════════
+   PREDICT MANUAL
+═══════════════════════════════════════════ */
+async function predictManual() {
+  const vals = getValues();
+  let hasError = false;
+  FEATURE_NAMES.forEach((n,i) => {
+    const el = document.getElementById(`f_${n}`);
+    if (isNaN(vals[i])) { el.classList.add('invalid'); hasError=true; }
+    else el.classList.remove('invalid');
+  });
+  if (hasError) { showError('manual','Please fill all 30 fields with numeric values.'); return; }
+  document.getElementById('error-msg').style.display='none';
+  setBusy('manual', true);
+  try {
+    const res = await fetch(`${API}/predict`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({features: vals})
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    showResult(data.fraud, data.probability);
+    addLogBatch([{ features: vals, fraud: data.fraud, probability: data.probability }]);
+  } catch(err) {
+    showError('manual',`Request failed: ${err.message}. Ensure FastAPI is running at ${API}`);
+  } finally {
+    setBusy('manual', false);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PREDICT CSV — smart routing
+═══════════════════════════════════════════ */
+async function predictCSV() {
+  if (!csvRows.length) { showError('csv','No CSV loaded. Please upload a file first.'); return; }
+  document.getElementById('error-msg-csv').style.display='none';
+
+  if (csvRows.length >= LARGE_BATCH_THRESHOLD) {
+    await predictCSVBatch();
+  } else {
+    await predictCSVSmall();
+  }
+}
+
+/* Small (<100 rows): concurrent individual requests, no progress bar needed */
+async function predictCSVSmall() {
+  setBusy('csv', true);
+  try {
+    const results = await Promise.all(
+      csvRows.map(row =>
+        fetch(`${API}/predict`,{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({features: row})
+        }).then(r=>r.json())
+      )
+    );
+    const batchRows = results
+      .map((d,i) => d.error ? null : { features: csvRows[i], fraud: d.fraud, probability: d.probability })
+      .filter(Boolean);
+    if (!batchRows.length) throw new Error('All predictions returned errors.');
+    finalizeBatch(batchRows);
+  } catch(err) {
+    showError('csv',`Request failed: ${err.message}. Ensure FastAPI is running at ${API}`);
+  } finally {
+    setBusy('csv', false);
+  }
+}
+
+/* Large (>=100 rows): single /predict_batch call with real progress tracking */
+async function predictCSVBatch() {
+  setBusy('csv', true);
+  showProgress(true, csvRows.length);
+
+  // Chunk rows into pages to send to /predict_batch (avoids request body size limits)
+  // Each chunk is 2000 rows max — well within FastAPI/uvicorn defaults
+  const CHUNK_SIZE = 2000;
+  const chunks = [];
+  for (let i=0; i<csvRows.length; i+=CHUNK_SIZE) {
+    chunks.push(csvRows.slice(i, i+CHUNK_SIZE));
+  }
+
+  const allPredictions = [];
+  const allProbabilities = [];
+  let processedRows = 0;
+  const startTime = Date.now();
+
+  try {
+    for (let ci=0; ci<chunks.length; ci++) {
+      const chunk = chunks[ci];
+
+      // Try /predict_batch first, fall back to chunked individual calls
+      let chunkPreds, chunkProbs;
+      try {
+        const res = await fetch(`${API}/predict_batch`,{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ rows: chunk })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        if (!data.predictions) throw new Error('No predictions field in response');
+        chunkPreds = data.predictions;
+        chunkProbs = data.probabilities;
+      } catch(batchErr) {
+        // /predict_batch not available — fall back to concurrent individual calls for this chunk
+        console.warn(`/predict_batch failed (${batchErr.message}), falling back to individual calls for chunk ${ci+1}`);
+        const results = await Promise.all(
+          chunk.map(row =>
+            fetch(`${API}/predict`,{
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({features: row})
+            }).then(r=>r.json())
+          )
+        );
+        chunkPreds = results.map(d => d.fraud ?? null);
+        chunkProbs = results.map(d => d.probability ?? null);
+      }
+
+      allPredictions.push(...chunkPreds);
+      allProbabilities.push(...chunkProbs);
+      processedRows += chunk.length;
+
+      // Real progress based on actual completion
+      const pct = (processedRows / csvRows.length) * 100;
+      const elapsed = Date.now() - startTime;
+      const rate = processedRows / (elapsed / 1000); // rows/sec
+      const remaining = (csvRows.length - processedRows) / rate;
+      setProgress(pct, processedRows, csvRows.length, remaining);
+    }
+
+    setProgress(100, csvRows.length, csvRows.length, 0);
+    await sleep(300);
+
+    const batchRows = allPredictions
+      .map((pred, i) => pred === null ? null : {
+        features: csvRows[i],
+        fraud: pred,
+        probability: allProbabilities[i]
+      })
+      .filter(Boolean);
+
+    if (!batchRows.length) throw new Error('All predictions returned errors.');
+    finalizeBatch(batchRows);
+    showProgress(false);
+
+  } catch(err) {
+    showError('csv',`Batch request failed: ${err.message}. Ensure FastAPI is running at ${API}`);
+    showProgress(false);
+  } finally {
+    setBusy('csv', false);
+  }
+}
+
+function finalizeBatch(batchRows) {
+  const fraudCount = batchRows.filter(r=>r.fraud===1).length;
+  const safeCount = batchRows.length - fraudCount;
+
+  if (batchRows.length === 1) {
+    showResult(batchRows[0].fraud, batchRows[0].probability);
+  } else {
+    const vc = document.getElementById('verdict-card');
+    vc.className = 'verdict-card fade-in';
+    vc.innerHTML = `
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Batch complete — ${batchRows.length.toLocaleString()} records</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <div style="text-align:center;padding:12px 16px;background:var(--success-bg);border-radius:10px;border:1px solid rgba(31,210,134,0.2)">
+          <div style="font-size:22px;font-weight:800;color:var(--success)">${safeCount.toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Legitimate</div>
+        </div>
+        <div style="text-align:center;padding:12px 16px;background:var(--danger-bg);border-radius:10px;border:1px solid rgba(255,77,106,0.2)">
+          <div style="font-size:22px;font-weight:800;color:var(--danger)">${fraudCount.toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Fraudulent</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${((fraudCount/batchRows.length)*100).toFixed(2)}% fraud rate</div>
+    `;
+    document.getElementById('prob-card').style.display='none';
+    document.getElementById('meta-grid').style.display='none';
+  }
+
+  addLogBatch(batchRows);
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS
+═══════════════════════════════════════════ */
+function showProgress(visible, total) {
+  const pw = document.getElementById('progress-wrap');
+  pw.classList.toggle('visible', visible);
+  if (visible) setProgress(0, 0, total, null);
+}
+
+function setProgress(pct, done, total, etaSec) {
+  document.getElementById('progress-fill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('progress-pct').textContent = Math.min(Math.round(pct), 100) + '%';
+  document.getElementById('progress-sub').textContent = `${done.toLocaleString()} / ${total.toLocaleString()} records`;
+  document.getElementById('progress-status').textContent = pct >= 100 ? 'Complete ✓' : 'Processing…';
+  const etaEl = document.getElementById('progress-eta');
+  if (etaSec !== null && etaSec > 0 && pct < 100) {
+    etaEl.textContent = `ETA: ~${etaSec < 60 ? Math.ceil(etaSec)+'s' : Math.ceil(etaSec/60)+'m'}`;
+  } else {
+    etaEl.textContent = '';
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ═══════════════════════════════════════════
+   RESULT DISPLAY
+═══════════════════════════════════════════ */
+function resetResultPanel() {
+  document.getElementById('verdict-card').innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;line-height:1.7">Enter features or upload a CSV<br>and run prediction</div>';
+  document.getElementById('verdict-card').className = 'verdict-card';
+  document.getElementById('prob-card').style.display = 'none';
+  document.getElementById('meta-grid').style.display = 'none';
+}
+
+function showResult(fraud, prob) {
+  const pct = (prob*100).toFixed(2);
+  const isFraud = fraud===1;
+  const color = isFraud ? 'var(--danger)' : 'var(--success)';
+  const bgColor = isFraud ? 'var(--danger-bg)' : 'var(--success-bg)';
+  const checkIcon = `<svg viewBox="0 0 24 24" style="stroke:var(--success)"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const alertIcon = `<svg viewBox="0 0 24 24" style="stroke:var(--danger)"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+
+  const vc = document.getElementById('verdict-card');
+  vc.className = 'verdict-card fade-in';
+  vc.innerHTML = `
+    <div class="verdict-icon" style="background:${bgColor}">${isFraud?alertIcon:checkIcon}</div>
+    <div class="verdict-label" style="color:${color}">${isFraud?'Fraud detected':'Legitimate'}</div>
+    <div class="verdict-sub">${isFraud?'Transaction flagged as fraudulent':'No fraud indicators found'}</div>
+  `;
+
+  const pc = document.getElementById('prob-card');
+  pc.style.display='block'; pc.className='card fade-in';
+  document.getElementById('prob-pct').textContent = pct+'%';
+  const fill = document.getElementById('prob-fill-result');
+  fill.style.width=pct+'%'; fill.style.background = isFraud?'var(--danger)':'var(--success)';
+
+  const mg = document.getElementById('meta-grid');
+  mg.style.display='grid'; mg.className='meta-grid fade-in';
+  document.getElementById('meta-prob').textContent = prob.toFixed(4);
+  const mv = document.getElementById('meta-verdict');
+  mv.textContent = isFraud?'1 (Fraud)':'0 (Safe)';
+  mv.style.color = color;
+}
+
+/* ═══════════════════════════════════════════
+   BUSY STATE
+═══════════════════════════════════════════ */
+function setBusy(mode, busy) {
+  if (mode==='manual') {
+    const btn=document.getElementById('predict-btn'), lbl=document.getElementById('btn-label'), spin=document.getElementById('spinner');
+    btn.disabled=busy; lbl.style.display=busy?'none':''; spin.style.display=busy?'block':'none';
+  } else {
+    const btn=document.getElementById('predict-btn-csv'), lbl=document.getElementById('btn-label-csv'), spin=document.getElementById('spinner-csv');
+    btn.disabled=busy; lbl.style.display=busy?'none':''; spin.style.display=busy?'block':'none';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ERROR / INFO
+═══════════════════════════════════════════ */
+function showError(type, msg) {
+  const id = type==='manual' ? 'error-msg' : 'error-msg-csv';
+  const el = document.getElementById(id);
+  el.style.cssText = '';
+  el.textContent=msg; el.style.display='block';
+}
+
+function showInfo(msg) {
+  const el = document.getElementById('error-msg');
+  el.style.cssText = 'display:block;background:rgba(108,99,255,0.08);border-color:rgba(108,99,255,0.25);color:#a09aff';
+  el.textContent = msg;
+}
+
+/* ═══════════════════════════════════════════
+   LOG SYSTEM
+═══════════════════════════════════════════ */
+function addLogBatch(rows) {
+  const batchId = logBatches.length + 1;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const batch = { id: batchId, time: timeStr, rows };
+  logBatches.push(batch);
+  totalLogItems += rows.length;
+
+  const emptyEl = document.getElementById('log-empty');
+  if (emptyEl) emptyEl.style.display = 'none';
+  document.getElementById('log-count').textContent = totalLogItems.toLocaleString();
+
+  renderBatch(batch);
+}
+
+function renderBatch(batch) {
+  const logBody = document.getElementById('log-body');
+  const fraudCount = batch.rows.filter(r=>r.fraud===1).length;
+  const safeCount = batch.rows.length - fraudCount;
+  const isLarge = batch.rows.length > LOG_INLINE_LIMIT;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'batch-block fade-in';
+  wrapper.id = `batch-${batch.id}`;
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'batch-header';
+  header.innerHTML = `
+    <span class="batch-label">Batch #${batch.id}</span>
+    <span class="batch-summary">
+      ${safeCount > 0 ? `<span class="batch-pill pill-safe">${safeCount.toLocaleString()} safe</span>`:''}
+      ${fraudCount > 0 ? `<span class="batch-pill pill-fraud">${fraudCount.toLocaleString()} fraud</span>`:''}
+    </span>
+    <span class="batch-time">${batch.time}</span>
+    <svg class="batch-chevron open" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+  `;
+
+  const rowsWrap = document.createElement('div');
+  rowsWrap.className = 'batch-rows open';
+
+  if (isLarge) {
+    // Virtualized view for large batches
+    rowsWrap.appendChild(buildLargeBatchView(batch, fraudCount, safeCount));
+  } else {
+    // Full inline rows for small batches
+    buildInlineRows(batch.rows, rowsWrap);
+  }
+
+  header.addEventListener('click', () => {
+    const isOpen = rowsWrap.classList.toggle('open');
+    header.querySelector('.batch-chevron').classList.toggle('open', isOpen);
+  });
+
+  const sep = document.createElement('div');
+  sep.className = 'batch-separator';
+
+  wrapper.appendChild(header);
+  wrapper.appendChild(rowsWrap);
+  logBody.insertBefore(sep, logBody.firstChild);
+  logBody.insertBefore(wrapper, logBody.firstChild);
+}
+
+/* Build DOM rows for small batches */
+function buildInlineRows(rows, container) {
+  rows.forEach((item, idx) => {
+    const isFraud = item.fraud===1;
+    const color = isFraud ? 'var(--danger)' : 'var(--success)';
+    const pct = (item.probability*100).toFixed(2);
+    const featPreview = `T=${item.features[0]} A=${item.features[29]}`;
+
+    const row = document.createElement('div');
+    row.className = 'log-row';
+    row.innerHTML = `
+      <span class="log-row-idx">#${(idx+1).toLocaleString()}</span>
+      <span class="log-verdict-dot" style="background:${color}"></span>
+      <span class="log-row-label" style="color:${color}">${isFraud?'Fraud':'Safe'}</span>
+      <span class="log-row-prob" style="color:${color}">${pct}%</span>
+      <span class="log-row-feat">${featPreview}</span>
+      <span class="log-row-expand">▾</span>
+    `;
+
+    const drawer = document.createElement('div');
+    drawer.className = 'detail-drawer';
+    drawer.innerHTML = `
+      <div class="detail-title">Feature values — row ${idx+1}</div>
+      <div class="detail-feat-grid">
+        ${FEATURE_NAMES.map((n,fi)=>`
+          <div class="detail-feat-cell">
+            <div class="fn">${n}</div>
+            <div class="fv">${Number(item.features[fi]).toFixed(4)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    row.addEventListener('click', () => {
+      const isOpen = drawer.classList.toggle('open');
+      row.querySelector('.log-row-expand').textContent = isOpen ? '▴' : '▾';
+    });
+
+    container.appendChild(row);
+    container.appendChild(drawer);
+  });
+}
+
+/* Virtualized summary view for large batches (avoids thousands of DOM nodes) */
+function buildLargeBatchView(batch, fraudCount, safeCount) {
+  const totalRows = batch.rows.length;
+  const avgProb = (batch.rows.reduce((s,r) => s+r.probability, 0) / totalRows * 100).toFixed(2);
+  const maxProb = (Math.max(...batch.rows.map(r=>r.probability)) * 100).toFixed(2);
+  const fraudRate = ((fraudCount/totalRows)*100).toFixed(2);
+
+  const container = document.createElement('div');
+  container.className = 'large-batch-summary';
+
+  // Stats row
+  const stats = document.createElement('div');
+  stats.className = 'large-batch-stats';
+  stats.innerHTML = `
+    <div class="lbs-cell">
+      <div class="lk">Total</div>
+      <div class="lv" style="color:var(--text)">${totalRows.toLocaleString()}</div>
+    </div>
+    <div class="lbs-cell">
+      <div class="lk">Fraud rate</div>
+      <div class="lv" style="color:var(--danger)">${fraudRate}%</div>
+    </div>
+    <div class="lbs-cell">
+      <div class="lk">Avg score</div>
+      <div class="lv" style="color:var(--accent)">${avgProb}%</div>
+    </div>
+    <div class="lbs-cell">
+      <div class="lk">Max score</div>
+      <div class="lv" style="color:var(--warn)">${maxProb}%</div>
+    </div>
+  `;
+  container.appendChild(stats);
+
+  // Scrollable rows preview — only fraud rows visible by default if >10% fraud, else all
+  const rowsSection = document.createElement('div');
+  rowsSection.className = 'large-batch-rows-preview';
+
+  let showFraudOnly = fraudCount > 0 && (fraudCount / totalRows) < 0.5;
+  let displayRows = showFraudOnly
+    ? batch.rows.map((r,i) => ({...r, origIdx:i})).filter(r=>r.fraud===1)
+    : batch.rows.map((r,i) => ({...r, origIdx:i}));
+
+  const PAGE = 100; // rows per page in virtualized view
+  let pageStart = 0;
+
+  function renderRowsHeader() {
+    rowsSection.innerHTML = '';
+    const hdr = document.createElement('div');
+    hdr.className = 'lbr-header';
+    hdr.innerHTML = `
+      <span>${showFraudOnly ? `Showing ${fraudCount.toLocaleString()} fraud rows` : `Showing all ${totalRows.toLocaleString()} rows`}</span>
+      ${fraudCount > 0 ? `<button class="fraud-only-toggle ${showFraudOnly?'active':''}" id="fot-${batch.id}">
+        ${showFraudOnly ? '⚠ Fraud only' : 'Show all'}
+      </button>` : ''}
+    `;
+    rowsSection.appendChild(hdr);
+
+    const scrollWrap = document.createElement('div');
+    scrollWrap.className = 'virtual-scroll-wrap';
+
+    const rowContainer = document.createElement('div');
+    scrollWrap.appendChild(rowContainer);
+    rowsSection.appendChild(scrollWrap);
+
+    function loadPage() {
+      const slice = displayRows.slice(pageStart, pageStart + PAGE);
+      slice.forEach(item => {
+        const isFraud = item.fraud===1;
+        const color = isFraud ? 'var(--danger)' : 'var(--success)';
+        const pct = (item.probability*100).toFixed(2);
+        const featPreview = `T=${item.features[0]} A=${item.features[29]}`;
+
+        const row = document.createElement('div');
+        row.className = 'log-row';
+        row.innerHTML = `
+          <span class="log-row-idx">#${(item.origIdx+1).toLocaleString()}</span>
+          <span class="log-verdict-dot" style="background:${color}"></span>
+          <span class="log-row-label" style="color:${color}">${isFraud?'Fraud':'Safe'}</span>
+          <span class="log-row-prob" style="color:${color}">${pct}%</span>
+          <span class="log-row-feat">${featPreview}</span>
+          <span class="log-row-expand">▾</span>
+        `;
+
+        const drawer = document.createElement('div');
+        drawer.className = 'detail-drawer';
+        drawer.innerHTML = `
+          <div class="detail-title">Feature values — row ${item.origIdx+1}</div>
+          <div class="detail-feat-grid">
+            ${FEATURE_NAMES.map((n,fi)=>`
+              <div class="detail-feat-cell">
+                <div class="fn">${n}</div>
+                <div class="fv">${Number(item.features[fi]).toFixed(4)}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        row.addEventListener('click', () => {
+          const isOpen = drawer.classList.toggle('open');
+          row.querySelector('.log-row-expand').textContent = isOpen ? '▴' : '▾';
+        });
+
+        rowContainer.appendChild(row);
+        rowContainer.appendChild(drawer);
+      });
+
+      pageStart += slice.length;
+
+      // Load more button
+      const existingLM = rowsSection.querySelector('.load-more-row');
+      if (existingLM) existingLM.remove();
+
+      if (pageStart < displayRows.length) {
+        const lm = document.createElement('div');
+        lm.className = 'load-more-row';
+        lm.textContent = `Load next ${Math.min(PAGE, displayRows.length - pageStart).toLocaleString()} of ${(displayRows.length - pageStart).toLocaleString()} remaining rows`;
+        lm.addEventListener('click', loadPage);
+        rowsSection.appendChild(lm);
+      }
+    }
+
+    loadPage();
+
+    // Toggle fraud only
+    const fot = hdr.querySelector(`#fot-${batch.id}`);
+    if (fot) {
+      fot.addEventListener('click', () => {
+        showFraudOnly = !showFraudOnly;
+        displayRows = showFraudOnly
+          ? batch.rows.map((r,i) => ({...r, origIdx:i})).filter(r=>r.fraud===1)
+          : batch.rows.map((r,i) => ({...r, origIdx:i}));
+        pageStart = 0;
+        renderRowsHeader();
+      });
+    }
+  }
+
+  renderRowsHeader();
+  container.appendChild(rowsSection);
+  return container;
+}
+
+/* ═══════════════════════════════════════════
+   CLEAR LOG
+═══════════════════════════════════════════ */
+function clearLog() {
+  logBatches = [];
+  totalLogItems = 0;
+  document.getElementById('log-count').textContent = '0';
+  document.getElementById('log-body').innerHTML = `
+    <div class="log-empty" id="log-empty">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      No predictions yet — results will appear here
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,127 +1,135 @@
-# 💳 Credit Card Fraud Detection using Machine Learning
+# 💳 Credit Card Fraud Detection — From Notebook to Production
 
-## 🚀 Project Overview
+> Forked from [Tufaque Sayyed's](https://github.com/tufaquesayyed) original research notebook. The goal was stated but never finished — deploy it. So I did.
 
-This project aims to **detect fraudulent credit card transactions** using advanced **Machine Learning techniques**.
-Financial fraud is one of the most critical issues banks face, and this model helps identify suspicious transactions based on past data.
-We’ve used **XGBoost**, **SMOTE**, and **evaluation metrics like ROC-AUC** to build a robust classification system.
+🌐 **Live at:** [credit-card-fraud-detection-model-ashen.vercel.app](https://credit-card-fraud-detection-model-ashen.vercel.app/)
 
 ---
 
-## 🧠 Key Highlights
-
-* **Algorithm Used:** XGBoost Classifier
-* **Challenge Tackled:** Highly imbalanced dataset
-* **Techniques:** Data scaling, SMOTE oversampling, ROC-AUC evaluation
-* **Goal:** Build a reliable model to classify fraud vs. non-fraud transactions
+<img width="1745" height="865" alt="image" src="https://github.com/user-attachments/assets/c41c56e4-bb4c-405f-900b-d87a1ce08730" />
 
 ---
 
-## 🧩 Dataset
+## What I Built On Top
 
-* **Source:** [Kaggle Credit Card Fraud Dataset](https://www.kaggle.com/mlg-ulb/creditcardfraud)
-* The dataset contains transaction details made by European cardholders in 2013.
-* It includes **Time**, **Amount**, and **PCA-transformed features (V1–V28)** to preserve confidentiality.
-* `Class` column →
+The original repo had a solid Jupyter notebook — good model, good evaluation, but no deployment. I opened an issue, then went ahead and built the whole thing out.
 
-  * `0`: Normal Transaction
-  * `1`: Fraudulent Transaction
+Here's what changed:
+
+**Model Extraction & Packaging**
+- Pulled the trained XGBoost model and both StandardScaler instances out of the notebook
+- Wrapped the scalers in a `ColumnTransformer` (sklearn) to handle them cleanly as a unit
+- Chained that into a full sklearn `Pipeline` alongside XGBoost
+- Serialized everything into a single `.joblib` file — one artifact, no state drift
+
+**Backend**
+- Built a FastAPI backend exposing prediction endpoints
+- Supports both single-transaction and batch inference (up to 100 rows)
+- Deployed on **Render**
+
+**Frontend**
+- Clean, minimal HTML/CSS frontend — no framework bloat
+- Two input modes: manual entry (all 30 features) and CSV upload for batch runs
+- Each prediction shows **model confidence (probability)**, the **threshold** used, and the **final verdict**
+- Live inference log — every prediction per batch is streamed and displayed in real time
+- No login, no friction
+- Deployed on **Vercel**
 
 ---
 
-## 🛠️ Installation & Requirements
+<img width="1523" height="846" alt="image" src="https://github.com/user-attachments/assets/32443963-e4e4-4373-ac0d-05e19af8b14d" />
 
-Before running the notebook, make sure you have the required libraries installed:
+---
 
-```bash
-!pip install xgboost imbalanced-learn
+## Original Model (unchanged)
+
+| Detail | Value |
+|---|---|
+| Algorithm | XGBoost Classifier |
+| Dataset | [Kaggle Credit Card Fraud](https://www.kaggle.com/mlg-ulb/creditcardfraud) — European cardholders, 2013 |
+| Features | Time, Amount, V1–V28 (PCA-transformed) |
+| Imbalance handling | SMOTE oversampling |
+| ROC-AUC | ~0.98 |
+
+The dataset is heavily skewed toward legitimate transactions. SMOTE was used during training to give the model a fair shot at learning fraud patterns without just predicting "not fraud" for everything.
+
+---
+
+## How the Pipeline Works
+
+```
+Raw Input (30 features)
+       ↓
+ColumnTransformer → StandardScaler on [Time, Amount]
+       ↓
+XGBoost Classifier
+       ↓
+Probability + Threshold → Final Prediction
 ```
 
-You can also install all dependencies using:
-
-```bash
-pip install -r requirements.txt
-```
+Keeping the scalers inside the pipeline means the same preprocessing that happened during training happens at inference — no manual scaling step that could drift or get forgotten.
 
 ---
 
-## 📘 File Structure
+## Repo Structure
 
 ```
-📂 Credit-Card-Fraud-Detection/
+📂 credit-card-fraud-detection/
 │
-├── 📄 CreditCardModel.ipynb       # Main Jupyter Notebook
-├── 📄 README.md                   # Project Documentation
-└── 📄 requirements.txt            # (optional) Library list
+├── 📄 CreditCardModel.ipynb        # Original notebook (model training)
+├── 📄 model_pipeline.joblib        # Exported sklearn Pipeline
+│
+├── 📂 backend/
+│   ├── main.py                     # FastAPI app
+│   ├── requirements.txt
+│   └── ...
+│
+├── 📂 frontend/
+│   ├── index.html                  # Prediction UI
+│   ├── sample_transactions_100.csv
+│
+└── 📄 README.md
+│   └── ...
 ```
 
 ---
 
-## 🧪 Workflow Summary
-
-| Step                      | Description                                      |
-| ------------------------- | ------------------------------------------------ |
-| **1. Data Loading**       | Imported and explored dataset from Kaggle        |
-| **2. Preprocessing**      | Scaled numerical features using StandardScaler   |
-| **3. Handling Imbalance** | Used SMOTE to balance minority (fraud) class     |
-| **4. Model Building**     | Trained **XGBoost Classifier**                   |
-| **5. Evaluation**         | ROC-AUC, Confusion Matrix, Classification Report |
-| **6. Testing**            | Custom input example to check model predictions  |
+<img width="1448" height="816" alt="image" src="https://github.com/user-attachments/assets/13b48a6a-6970-4905-9c02-367e65491260" />
 
 ---
 
-## 📊 Model Performance
+## Running It Locally
 
-| Metric                | Score                          |
-| --------------------- | ------------------------------ |
-| **ROC-AUC**           | ~0.98                          |
-| **Precision (Fraud)** | High (depending on seed)       |
-| **Recall (Fraud)**    | High — minimal false negatives |
-
----
-
-## 🧾 Example Prediction
-
-You can test the model by giving a **random transaction sample** and see if it predicts *fraudulent* or *legitimate*:
-
-```python
-sample = X_test.iloc[0].values.reshape(1, -1)
-prediction = model.predict(sample)
-print("🔍 Predicted:", "Fraud" if prediction[0] == 1 else "Not Fraud")
+**Backend**
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
----
+**Frontend**
 
-## 🧠 Learning Outcomes
-
-* Real-world application of **classification models** on imbalanced data
-* Hands-on with **SMOTE**, **XGBoost**, and **evaluation plots**
-* Understanding **ROC**, **Precision-Recall**, and **Confusion Matrix** interpretation
+Just open `frontend/index.html` in a browser, or point it at your local FastAPI instance.
 
 ---
 
-## 🌟 Future Improvements
+## What's Left (Honest To-Do)
 
-* Add **real-time transaction monitoring**
-* Deploy as a **web dashboard (Streamlit / FastAPI)**
-* Integrate **Explainability (SHAP values)** for interpretability
-
----
-
-## 👨‍💻 Author
-
-**Tufaque Sayyed**
-🎓 B.Tech in Artificial Intelligence & Machine Learning
-🔗 [LinkedIn Profile](https://www.linkedin.com/in/tufaque-sayyed-843596364/)
-🌐 [Portfolio Website](https://tufaquesayyed.vercel.app)
+- [ ] SHAP values for per-prediction explainability
+- [ ] Auth layer if this ever needs to be multi-tenant
+- [ ] Threshold tuning UI (let users adjust the decision boundary)
+- [ ] Better error messages for malformed CSVs
 
 ---
 
-## 📜 License
+## Original Work
 
-This project is open-sourced under the **MIT License**. Feel free to use and modify it with proper credits.
+Model, training pipeline, and research by **Tufaque Sayyed**
+🌐 [Portfolio](https://tufaquesayyed.vercel.app)
+
+Deployment, packaging, and frontend by **[Arjun Gupta]**
+[GitHub](https://github.com/Neural-GPT)
 
 ---
 
-### ⭐ If you found this project useful, don’t forget to star the repo!
-
+📜 MIT License — use it, fork it, improve it.
